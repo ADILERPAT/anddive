@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+		package="divestoclimb.scuba.dive"
+		android:versionCode="1" android:versionName="0.6">
+	<uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4" />
+	<!-- <supports-screens android:smallScreens="true" /> -->
+	<application android:icon="@drawable/icon" android:label="@string/app_name">
+		<activity android:name=".Main" android:label="@string/app_name">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".DecosetList" android:label="@string/decosets">
+		</activity>
+		<activity android:name=".DecosetEdit" android:label="@string/decoset_editor"
+				android:theme="@android:style/Theme.Dialog">
+			<intent-filter>
+				<action android:name="android.intent.action.EDIT" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:mimeType="vnd.android.cursor.item/vnd.divestoclimb.scuba.dive.decoset" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".Settings" android:label="@string/settings">
+		</activity>
+		<activity android:name=".GasSourceSelector" android:label="@string/select_gas_source"
+				android:theme="@android:style/Theme.Dialog">
+			<intent-filter>
+				<action android:name="android.intent.action.EDIT" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:scheme="gassource" android:host="any" />
+			</intent-filter>
+			<intent-filter>
+				<action android:name="android.intent.action.EDIT" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:scheme="gassource" android:host="gassource" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".SimpleMixSelector" android:label="@string/select_mix"
+				android:theme="@android:style/Theme.Dialog">
+			<intent-filter android:priority="1">
+				<action android:name="android.intent.action.EDIT" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:scheme="gassource" android:host="mix" />
+			</intent-filter>
+		</activity>
+		<provider android:name=".storage.DiveProvider"
+				android:authorities="divestoclimb.scuba.dive">
+		</provider>
+	</application>
+</manifest>

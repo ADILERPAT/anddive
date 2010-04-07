@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+		xmlns:android="http://schemas.android.com/apk/res/android">
+	<ListPreference
+			android:key="units"
+			android:title="@string/units" 
+			android:entries="@array/units"
+			android:entryValues="@array/unitvalues"
+			android:dialogIcon="@drawable/units_imperial"
+			android:defaultValue="0" />
+
+	<!-- TODO: shallowest stop (will be a DistancePreference) -->
+	
+	<CheckboxPreference
+			android:key="airbreaks"
+			android:title="@string/airbreaks_pref"
+			android:summary="@string/airbreaks_summary"
+			android:defaultValue="true" />
+			
+	<!-- TODO: min switch time (NumberPreference in minutes) -->
+	
+	<CheckboxPreference
+			android:key="cc"
+			android:title="@string/cc_pref"
+			android:summary="@string/cc_summary"
+			android:defaultValue="false" />
+
+	<!-- TODO: add buttons that launch preference activities for deco planner and gas planner -->
+</PreferenceScreen>

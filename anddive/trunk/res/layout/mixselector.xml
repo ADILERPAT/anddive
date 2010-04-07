@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:app="http://schemas.android.com/apk/res/divestoclimb.scuba.dive"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content">
+	<TableLayout android:id="@+id/table"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+		<TableRow>
+			<TextView android:text="@string/oxygen_label"
+					android:padding="3dip" />
+			<divestoclimb.scuba.dive.NumberSelector android:id="@+id/o2"
+					app:decimalplaces="1"
+					app:lowerlimit="5"
+					app:upperlimit="100"
+					app:textboxwidth="70sp" />
+		</TableRow>
+		<TableRow>
+			<TextView android:text="@string/helium_label"
+					android:padding="3dip" />
+			<divestoclimb.scuba.dive.NumberSelector android:id="@+id/he"
+					app:decimalplaces="1"
+					app:lowerlimit="0"
+					app:upperlimit="100"
+					app:textboxwidth="70sp" />
+		</TableRow>
+	</TableLayout>
+	
+	<TextView android:id="@+id/gasmixer_upsell"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_below="@id/table"
+			android:text="@string/gasmixer_upsell"
+			android:autoLink="all" />
+
+	<Button android:id="@+id/ok"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_below="@id/gasmixer_upsell"
+			android:layout_alignParentRight="true"
+			android:text="@string/ok"
+			android:minWidth="90sp" />
+	<Button android:id="@+id/cancel"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_below="@id/gasmixer_upsell"
+			android:layout_toLeftOf="@id/ok"
+			android:minWidth="90sp"
+			android:text="@string/cancel" />
+</RelativeLayout>

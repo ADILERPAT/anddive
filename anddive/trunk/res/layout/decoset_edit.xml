@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:app="http://schemas.android.com/apk/res/divestoclimb.scuba.dive"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:orientation="vertical"
+		android:gravity="center">
+	<ListView android:id="@android:id/list"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:layout_weight="1"
+			android:choiceMode="singleChoice" />
+	
+	<RelativeLayout android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal">
+		
+		<Button android:id="@+id/gasSrc"
+				android:layout_width="100sp"
+				android:layout_height="wrap_content"
+				android:text="@string/select_gas" />
+
+		<divestoclimb.scuba.dive.NumberSelector android:id="@+id/depth"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_alignParentRight="true"
+				android:layout_alignParentTop="true"
+				android:gravity="right"
+				app:textboxwidth="60sp" />
+
+		<TextView android:id="@+id/depth_unit"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_toLeftOf="@id/depth"
+				android:layout_alignTop="@id/depth"
+				android:layout_marginTop="7sp" />
+
+		<ToggleButton android:id="@+id/oc_toggle"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_below="@id/gasSrc"
+				android:layout_alignParentLeft="true"
+				android:layout_marginLeft="20sp"
+				android:textOff="@string/open_circuit_abbrev"
+				android:textOn="@string/open_circuit_abbrev" />
+
+		<ImageButton android:id="@+id/go"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_alignTop="@id/oc_toggle"
+				android:layout_alignParentRight="true"
+				android:layout_marginRight="31sp"
+				android:minWidth="80sp"
+				android:src="@drawable/go" />
+
+		<ImageButton android:id="@+id/delete"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_alignTop="@id/oc_toggle"
+				android:layout_toLeftOf="@id/go"
+				android:layout_marginRight="30dp"
+				android:src="@drawable/closedelete" />
+
+	</RelativeLayout>
+</LinearLayout>		

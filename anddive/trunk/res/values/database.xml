@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- All statements needed to create the current version of the database -->
+	<string-array name="db_create">
+		<item>drop table if exists profileitem</item>
+		<item>drop table if exists dive</item>
+		<item>drop table if exists decosetitem</item>
+		<item>drop table if exists decoset</item>
+		<item>drop table if exists mission</item>
+		<item>drop table if exists category</item>
+		<item>create table category (
+			_id integer primary key autoincrement,
+			Name text not null
+		)</item>
+		<item>"create table mission (
+			_id integer primary key autoincrement,
+			Name text unique not null,
+			LastUpdate text check (LastUpdate = NULL or LastUpdate like '____-__-__ __:__:__'),
+			Category integer references category (_id) default 0
+		)"</item>
+		<item>create table decoset (
+			_id integer primary key autoincrement,
+			Name text unique not null
+		)</item>
+		<item>create table decosetitem (
+			_id integer primary key autoincrement,
+			DecoSet integer references decoset (_id),
+			SetPointTimes10 integer,
+			MixO2Times10 integer,
+			MixHeTimes10 integer,
+			MaxDepth real
+		)</item>
+		<item>create table dive (
+			_id integer primary key autoincrement,
+			Name text not null,
+			Type integer not null,
+			Mission integer references mission (_id),
+			MissionOrder integer not null,
+			DecoSet integer references decoset (_id) default 0,
+			SurfaceInterval integer,
+			Altitude integer not null,
+			AcclimatizationTime integer not null,
+			DecoConfig blob,
+			FinalDecoState blob,
+			FinalCnsState real,
+			FinalOtuState real
+		)</item>
+		<item>create table profileitem (
+			_id integer primary key autoincrement,
+			Dive integer references dive (_id),
+			ItemOrder integer not null,
+			Depth integer,
+			Time integer,
+			TimeType integer,
+			SetPointTimes10 integer,
+			MixO2Times10 integer,
+			MixHeTimes10 integer,
+			Source integer not null,
+			Active integer not null,
+			Valid integer not null
+		)</item>
+	</string-array>
+	<!-- All statements to populate the database with default data. This array could be
+	     overridden for other languages -->
+	<string-array name="db_load">
+		<item>delete from category where _id=0</item>
+		<item>"insert into category (_id, Name) values (0, 'Unfiled')"</item>
+		<item>delete from decosetitem where DecoSet&lt;=3</item>
+		<item>delete from decoset where _id&lt;=3</item>
+		<item>"insert into decoset (_id, Name) values (0, 'Back Gas')"</item>
+		<item>"insert into decoset (_id, Name) values (1, 'Oxygen only')"</item>
+		<item>insert into decosetitem (DecoSet, MixO2Times10, MixHeTimes10, MaxDepth) values (1, 1000, 0, 6.096)</item>
+		<item>"insert into decoset (_id, Name) values (2, '50% only')"</item>
+		<item>insert into decosetitem (DecoSet, MixO2Times10, MixHeTimes10, MaxDepth) values (2, 500, 0, 21.336)</item>
+		<item>"insert into decoset (_id, Name) values (3, '100%, 50%')"</item>
+		<item>insert into decosetitem (DecoSet, MixO2Times10, MixHeTimes10, MaxDepth) values (3, 500, 0, 21.336)</item>
+		<item>insert into decosetitem (DecoSet, MixO2Times10, MixHeTimes10, MaxDepth) values (3, 1000, 0, 6.096)</item>
+	</string-array>
+</resources>
