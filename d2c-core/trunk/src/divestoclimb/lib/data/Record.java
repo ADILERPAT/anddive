@@ -1,62 +1,25 @@
 package divestoclimb.lib.data;
 
 /**
- * A class that handles common logic for any type of data record
+ * A class that handles logic for data records that are identified by a single
+ * unique integer key
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public abstract class Record {
+public abstract class Record extends BaseRecord {
 
 	/**
 	 * A unique key that describes this record. It's assumed that the storage
 	 * mechanism assigns these. If the record is a "phantom", i.e. hasn't
 	 * actually been committed to storage somewhere, this will be set to NO_ID.
 	 */
-	protected long mID;
-	
-	public static final long NO_ID = -1;
-	
-	/**
-	 * Tracks whether or not this record is "dirty", i.e. if any data has been
-	 * changed in the object which has not been committed back to the database.
-	 * Subclass setters are responsible for setting mDirty to true if they
-	 * change any committable value.
-	 */
-	protected boolean mDirty;
-	
-	protected Updater mUpdater = null;
-	
-	/**
-	 * If a type of Record needs to be kept in a specific order, have that
-	 * subclass implement Orderable. The generic allows setOrder to return
-	 * an instance of the class for which it's a method, so when implementing
-	 * make sure you set E to your own class. e.g.
-	 * public class Employee extends Record implements Orderable&lt;Employee&gt; { }
-	 * @author Ben Roberts (divestoclimb@gmail.com)
-	 */
-	public static interface Orderable<E extends Record> {
-		/**
-		 * Get the current value of the order field
-		 * @return A number which, when sorted ascending across all Records in
-		 * the set, would cause the set to be in the correct order.
-		 */
-		public int getOrder();
-		
-		/**
-		 * Change the order field value
-		 * @param order The new value of order. This method does not need to
-		 * ensure that the value is unique across the Record set; for such tools
-		 * see CursorOrderer (an Android implementation)
-		 * @return this
-		 */
-		public E setOrder(int order);	
-	}
+	protected long id;
 	
 	/**
 	 * A constructor for building a new, empty Record instance. Use this when
 	 * a new Record is being created that does not exist in backend storage yet.
 	 */
 	public Record() {
-		mID = NO_ID;
+		id = NO_ID;
 		mDirty = true;
 	}
 	
@@ -67,7 +30,7 @@ public abstract class Record {
 	 * @param id The unique key of this record as represented in backend storage.
 	 */
 	public Record(long id) {
-		mID = id;
+		this.id = id;
 		mDirty = false;
 	}
 
@@ -75,14 +38,15 @@ public abstract class Record {
 	 * Get the unique key for this record
 	 * @return The key, or -1 if this record has not been assigned one.
 	 */
-	public long getID() { return mID; }
+	public long getId() { return id; }
 	
-	public boolean isDirty() { return mDirty; }
+	protected Record setId(long id) { this.id = id; return this; }
 	
-	public boolean isPhantom() { return mID == NO_ID; }
+	@Override
+	public boolean isPhantom() { return id == NO_ID; }
 	
 	protected void reset(long id) {
-		mID = id;
+		this.id = id;
 		mDirty = false;
 	}
 	
@@ -92,7 +56,33 @@ public abstract class Record {
 	// operations.
 	@Override
 	public boolean equals(Object o2) {
-		return (o2.getClass() == getClass()) && mID == ((Record)o2).getID();
+		return (o2.getClass().getName().equals(getClass().getName())) && id == ((Record)o2).getId();
+	}
+	
+	protected Updater mUpdater = null;
+	
+	public static interface Updater {
+
+		/**
+		 * Commits the data being stored in this Record as a new record in the
+		 * backend storage.
+		 * @return The ID assigned by backend storage for this Record, or NO_ID
+		 * if the create failed.
+		 */
+		public long doCreate(Record r);
+	
+		/**
+		 * Commits the data being stored in this Record back to the original
+		 * record in backend storage.
+		 * @return true if the operation succeeds, false otherwise.
+		 */
+		public boolean doUpdate(Record r);
+
+		/**
+		 * Delete this record from the storage location
+		 * @return true if the operation succeeds, false otherwise
+		 */
+		public boolean doDelete(Record r);
 	}
 	
 	/**
@@ -117,6 +107,7 @@ public abstract class Record {
 	 * creating the record there if it doesn't already exist.
 	 * @return true if the operation succeeded, false otherwise
 	 */
+	@Override
 	public boolean commit() {
 		if(! mDirty) {
 			return true;
@@ -124,9 +115,9 @@ public abstract class Record {
 		if(mUpdater == null) {
 			return false;
 		}
-		if(mID == NO_ID) {
-			mID = mUpdater.doCreate(this);
-			return mID != NO_ID;
+		if(id == NO_ID) {
+			id = mUpdater.doCreate(this);
+			return id != NO_ID;
 		} else {
 			return mUpdater.doUpdate(this);
 		}
@@ -141,29 +132,5 @@ public abstract class Record {
 	 */
 	public static interface Fetcher<R extends Record> {
 		public R fetch(long id);
-	}
-	
-	public static interface Updater {
-
-		/**
-		 * Commits the data being stored in this Record as a new record in the
-		 * backend storage.
-		 * @return The ID assigned by backend storage for this Record, or NO_ID
-		 * if the create failed.
-		 */
-		public long doCreate(Record r);
-	
-		/**
-		 * Commits the data being stored in this Record back to the original
-		 * record in backend storage.
-		 * @return true if the operation succeeds, false otherwise.
-		 */
-		public boolean doUpdate(Record r);
-
-		/**
-		 * Delete this record from the storage location
-		 * @return true if the operation succeeds, false otherwise
-		 */
-		public boolean doDelete(Record r);
 	}
 }
