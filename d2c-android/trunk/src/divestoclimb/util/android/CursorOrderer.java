@@ -3,6 +3,7 @@ package divestoclimb.util.android;
 import java.util.Stack;
 
 import android.database.Cursor;
+import divestoclimb.lib.data.BaseRecord;
 import divestoclimb.lib.data.Record;
 
 /**
@@ -18,7 +19,7 @@ import divestoclimb.lib.data.Record;
  * log2(STD_ORDER_INCREMENT) inserts happen in the same area.
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public class CursorOrderer<E extends Record & Record.Orderable<?>> {
+public class CursorOrderer<E extends Record & BaseRecord.Orderable<?>> {
 
 	// The number to increment successive orders when appending to and reindexing the list.
 	public static final int STD_ORDER_INCREMENT = 16;
@@ -185,7 +186,7 @@ public class CursorOrderer<E extends Record & Record.Orderable<?>> {
 			c.moveToFirst();
 			do {
 				item = om.getFromCursor(c);
-				if(item.getID() == id) {
+				if(item.getId() == id) {
 					found = true;
 					break;
 				}
