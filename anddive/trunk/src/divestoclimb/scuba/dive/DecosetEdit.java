@@ -131,7 +131,7 @@ public class DecosetEdit extends ListActivity implements View.OnClickListener,
 	public void onResume() {
 		super.onResume();
 		if(! mInitialized) {
-			mItemCursor = mORMapper.fetchDecosetItems(mDecoset.getID());
+			mItemCursor = mORMapper.fetchDecosetItems(mDecoset.getId());
 			Log.w("DecosetEdit", String.valueOf(mItemCursor.getCount()));
 			startManagingCursor(mItemCursor);
 			ListAdapter adapter = new ObjectMappedCursorAdapter<Decoset.Item>(this,
@@ -187,11 +187,11 @@ public class DecosetEdit extends ListActivity implements View.OnClickListener,
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putLong(KEY_DECOSET_ID, mDecoset.getID());
+		outState.putLong(KEY_DECOSET_ID, mDecoset.getId());
 		if(mOpenItem != null) {
 			// Auto-save the item
 			mOpenItem.commit();
-			outState.putLong(KEY_OPENITEM_ID, mOpenItem.getID());
+			outState.putLong(KEY_OPENITEM_ID, mOpenItem.getId());
 		}
 	}
 	
@@ -209,7 +209,7 @@ public class DecosetEdit extends ListActivity implements View.OnClickListener,
 					// TODO: decide how to determine initial depth for setpoint
 					depth = 100;
 				}
-				mOpenItem = new Decoset.Item(mDecoset.getID(), depth, source);
+				mOpenItem = new Decoset.Item(mDecoset.getId(), depth, source);
 			} else {
 				mOpenItem.setGasSource(source);
 			}

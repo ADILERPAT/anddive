@@ -88,7 +88,7 @@ public class DecosetList extends ListActivity implements View.OnClickListener {
 		final Decoset decoset = new Decoset(name);
 		decoset.setUpdater(mORMapper.mDecosetUpdater);
 		decoset.commit();
-		edit(decoset.getID());
+		edit(decoset.getId());
 	}
 	
 	@Override

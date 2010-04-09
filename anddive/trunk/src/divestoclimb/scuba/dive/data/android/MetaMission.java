@@ -28,9 +28,9 @@ public class MetaMission extends Mission {
 	public Date getLastUpdate() { return mLastUpdate; }
 
 	public Mission setCategory(Category cat) {
-		if(cat.getID() != mCategoryID) {
+		if(cat.getId() != mCategoryID) {
 			mCategory = cat;
-			mCategoryID = cat.getID();
+			mCategoryID = cat.getId();
 			mDirty = true;
 		}
 		return this;

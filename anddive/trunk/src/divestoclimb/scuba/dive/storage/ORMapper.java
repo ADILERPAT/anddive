@@ -99,11 +99,11 @@ public class ORMapper extends PublicORMapper {
 		}
 	
 		public boolean doUpdate(Record category) {
-			return mDbAdapter.updateCategory(category.getID(), getCategoryValues((Category)category));
+			return mDbAdapter.updateCategory(category.getId(), getCategoryValues((Category)category));
 		}
 		
 		public boolean doDelete(Record category) {
-			return mDbAdapter.deleteCategory(category.getID());
+			return mDbAdapter.deleteCategory(category.getId());
 		}
 	};
 
@@ -150,11 +150,11 @@ public class ORMapper extends PublicORMapper {
 		}
 
 		public boolean doUpdate(Record mission) {
-			return mDbAdapter.updateMission(mission.getID(), getMissionValues((MetaMission)mission));
+			return mDbAdapter.updateMission(mission.getId(), getMissionValues((MetaMission)mission));
 		}
 		
 		public boolean doDelete(Record mission) {
-			return mDbAdapter.deleteMission(mission.getID());
+			return mDbAdapter.deleteMission(mission.getId());
 		}
 	};
 }

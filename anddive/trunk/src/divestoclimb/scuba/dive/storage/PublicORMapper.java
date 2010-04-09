@@ -209,7 +209,7 @@ public class PublicORMapper {
 					return null;
 				}
 			}
-			Cursor c = fetchDecosetItems(d.getID());
+			Cursor c = fetchDecosetItems(d.getId());
 			if(c == null) {
 				return null;
 			}
@@ -239,12 +239,12 @@ public class PublicORMapper {
 		}
 
 		public boolean doUpdate(Record set) {
-			final Uri uri = Uri.withAppendedPath(CONTENT_URI, "decosets/" + String.valueOf(set.getID()));
+			final Uri uri = Uri.withAppendedPath(CONTENT_URI, "decosets/" + String.valueOf(set.getId()));
 			return mCtx.getContentResolver().update(uri, getDecosetValues((Decoset)set), null, null) > 0;
 		}
 
 		public boolean doDelete(Record set) {
-			return deleteDecoset(set.getID());
+			return deleteDecoset(set.getId());
 		}
 	};
 	
@@ -319,12 +319,12 @@ public class PublicORMapper {
 		}
 
 		public boolean doUpdate(Record item) {
-			final Uri uri = Uri.withAppendedPath(CONTENT_URI, "decosets/items/" + String.valueOf(item.getID()));
+			final Uri uri = Uri.withAppendedPath(CONTENT_URI, "decosets/items/" + String.valueOf(item.getId()));
 			return mCtx.getContentResolver().update(uri, getDecosetItemValues((Decoset.Item)item), null, null) > 0;
 		}
 
 		public boolean doDelete(Record item) {
-			final Uri uri = Uri.withAppendedPath(CONTENT_URI, "decosets/items/" + String.valueOf(item.getID()));
+			final Uri uri = Uri.withAppendedPath(CONTENT_URI, "decosets/items/" + String.valueOf(item.getId()));
 			return mCtx.getContentResolver().delete(uri, null, null) > 0;
 		}
 	};
@@ -456,19 +456,19 @@ public class PublicORMapper {
 	
 	public Record.Updater mProfileItemUpdater = new Record.Updater() {
 		@Override
-		public long doCreate(Record profileItem) {
+		public long doCreate(Record r) {
 			// TODO Auto-generated method stub
 			return 0;
 		}
 
 		@Override
-		public boolean doDelete(Record profileItem) {
+		public boolean doDelete(Record r) {
 			// TODO Auto-generated method stub
 			return false;
 		}
 
 		@Override
-		public boolean doUpdate(Record profileItem) {
+		public boolean doUpdate(Record r) {
 			// TODO Auto-generated method stub
 			return false;
 		}

@@ -17,7 +17,7 @@ public class CursorProfileIterator extends ProfileIterator<ProfileItem> {
 	public CursorProfileIterator(PublicORMapper mapper, Dive dive, int source) {
 		super(dive, source);
 		mORMapper = mapper;
-		mCursor = mapper.fetchProfileItems(dive.getID());
+		mCursor = mapper.fetchProfileItems(dive.getId());
 	}
 	
 	public Cursor getCursor() {
