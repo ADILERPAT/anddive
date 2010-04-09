@@ -92,9 +92,9 @@ public class Dive extends Record implements Record.Orderable<Dive> {
 		return mDecoset;
 	}
 	public Dive setDecoset(Decoset decoset) {
-		if(decoset.getID() != mDecosetID) {
+		if(decoset.getId() != mDecosetID) {
 			mDecoset = decoset;
-			mDecosetID = decoset.getID();
+			mDecosetID = decoset.getId();
 			mDirty = true;
 		}
 		return this;

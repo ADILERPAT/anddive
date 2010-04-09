@@ -69,11 +69,10 @@ public class Decoset extends Record {
 		}
 		
 		public void reset(long id, long decoset_id, int max_depth, GasSource source) {
-			mID = id;
+			super.reset(id);
 			mDecosetID = decoset_id;
 			mMaxDepth = max_depth;
 			mGasSource = source;
-			mDirty = false;
 		}
 
 	}
@@ -174,7 +173,7 @@ public class Decoset extends Record {
 		}
 		// If we get here, an existing item at this depth wasn't found. Add one.
 		if(source != null) {
-			Item i = new Item(getID(), depth, source);
+			Item i = new Item(getId(), depth, source);
 			i.setUpdater(mItemUpdater);
 			mItems.add(i);
 		}
