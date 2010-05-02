@@ -1,4 +1,4 @@
-package divestoclimb.widget.android;
+package divestoclimb.android.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;

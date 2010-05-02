@@ -1,6 +1,8 @@
-package divestoclimb.widget.android;
+package divestoclimb.android.widget;
 
 import java.util.WeakHashMap;
+
+import divestoclimb.android.database.CursorObjectMapper;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -20,7 +22,7 @@ import android.widget.ResourceCursorAdapter;
 public class ObjectMappedCursorAdapter<T> extends ResourceCursorAdapter {
 
 	protected int[] mViewsToBind;
-	protected ObjectMapper<T> mObjectMapper;
+	protected CursorObjectMapper<T> mObjectMapper;
 	protected ViewBinder<T> mViewBinder;
 	protected WeakHashMap<View, View[]> mHolders = new WeakHashMap<View, View[]>();
 
@@ -38,7 +40,7 @@ public class ObjectMappedCursorAdapter<T> extends ResourceCursorAdapter {
 	 * 				view from viewsToBind with data from the row's object
 	 */
 	public ObjectMappedCursorAdapter(Context context, int layout, Cursor c,
-			int[] viewsToBind, ObjectMapper<T> objectMapper, ViewBinder<T> viewBinder) {
+			int[] viewsToBind, CursorObjectMapper<T> objectMapper, ViewBinder<T> viewBinder) {
 		super(context, layout, c);
 		mViewsToBind = viewsToBind;
 		mObjectMapper = objectMapper;
@@ -78,18 +80,28 @@ public class ObjectMappedCursorAdapter<T> extends ResourceCursorAdapter {
 		final View[] holder = mHolders.get(view);
 		final ViewBinder<T> viewBinder = mViewBinder;
 		final int count = mViewsToBind.length;
-		T obj = mObjectMapper.getObjectFromCursor(cursor);
+		T obj = mObjectMapper.getObjectFromCursor(cursor, true);
 		
 		for(int i = 0; i < count; i ++) {
 			viewBinder.setViewValue(holder[i], obj);
 		}
 	}
-
-	public static interface ObjectMapper<T> {
-		public T getObjectFromCursor(Cursor c);
-	}
 	
+	/**
+	 * Binds data from the backing object to individual Views.
+	 * @author Ben Roberts (divestoclimb@gmail.com)
+	 *
+	 * @param <T> The type of backing object
+	 */
 	public static interface ViewBinder<T> {
+		/**
+		 * Bind the appropriate data from obj to the given view. For a
+		 * given row of the cursor, this method will be called for each
+		 * view ID in the CursorAdapter's viewsToBind parameter.
+		 * @param view The View to set up
+		 * @param obj The backing object whose data should be applied to
+		 * view
+		 */
 		public void setViewValue(View view, T obj);
 	}
 }

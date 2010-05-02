@@ -1,4 +1,4 @@
-package divestoclimb.widget.android;
+package divestoclimb.android.widget;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import divestoclimb.android.util.ViewId;
 
 import android.content.Context;
 import android.content.res.TypedArray;

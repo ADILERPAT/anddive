@@ -1,4 +1,4 @@
-package divestoclimb.widget.android;
+package divestoclimb.android.util;
 
 import java.util.Random;
 

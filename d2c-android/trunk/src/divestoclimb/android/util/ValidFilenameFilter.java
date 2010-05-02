@@ -1,4 +1,4 @@
-package divestoclimb.util.android;
+package divestoclimb.android.util;
 
 import android.text.InputFilter;
 import android.text.Spanned;
