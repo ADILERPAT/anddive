@@ -5,17 +5,17 @@ package divestoclimb.lib.scuba;
  * to a given pressure. Supports operations to add and remove gas from the tank.
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public class GasSupply {
+public class GasSupply implements Cloneable {
 	private Mix mMix;
 	private Cylinder mCylinder;
 	private double mPressure;
 	private float mTemperature;
 	private boolean mUseIdealGasLaws;
-	
+
 	public GasSupply(Cylinder c) {
 		this(c, new Mix(0.21f, 0), 0);
 	}
-	
+
 	/**
 	 * Create a new gas source from a cylinder size, an initial mix, and a starting
 	 * pressure.
@@ -27,11 +27,11 @@ public class GasSupply {
 	public GasSupply(Cylinder c, Mix m, int pressure) {
 		this(c, m, pressure, false);
 	}
-	
+
 	public GasSupply(Cylinder c, Mix m, int pressure, boolean ideal_gas_laws) {
 		this(c, m, pressure, ideal_gas_laws, c.getUnits().absTempAmbient());
 	}
-	
+
 	public GasSupply(Cylinder c, Mix m, int pressure, boolean ideal_gas_laws, float temperature) {
 		mMix = m;
 		mCylinder = c;
@@ -39,47 +39,56 @@ public class GasSupply {
 		mUseIdealGasLaws = ideal_gas_laws;
 		mTemperature = temperature;
 	}
-	
+
+	public GasSupply clone() {
+		try {
+			return (GasSupply)super.clone();
+		} catch (CloneNotSupportedException e) {
+			// Impossible since we implemented Cloneable
+			return null;
+		}
+	}
+
 	public void useIdealGasLaws() {
 		useIdealGasLaws(true);
 	}
-	
+
 	public void useIdealGasLaws(boolean set) {
 		mUseIdealGasLaws = set;
 	}
-	
+
 	public Mix getMix() {
 		return mMix;
 	}
-	
+
 	public void setMix(Mix m) {
 		mMix = m;
 	}
-	
+
 	public Cylinder getCylinder() {
 		return mCylinder;
 	}
-	
+
 	public void setCylinder(Cylinder c) {
 		mCylinder = c;
 	}
-	
+
 	public double getPressure() {
 		return mPressure;
 	}
-	
+
 	public void setPressure(int p) {
 		mPressure = p;
 	}
-	
+
 	public double getTemperature() {
 		return mTemperature;
 	}
-	
+
 	public void setTemperature(int t) {
 		mTemperature = t;
 	}
-	
+
 	/**
 	 * Get the total amount of gas in capacity units at sea level pressure
 	 * @return The amount of gas in the supply
@@ -91,19 +100,19 @@ public class GasSupply {
 			return mCylinder.getVdwCapacityAtPressure(mPressure, mMix, mTemperature);
 		}
 	}
-	
+
 	public double getO2Amount() {
 		return getGasAmount() * mMix.getfO2();
 	}
-	
+
 	public double getN2Amount() {
 		return getGasAmount() * mMix.getfN2();
 	}
-	
+
 	public double getHeAmount() {
 		return getGasAmount() * mMix.getfHe();
 	}
-	
+
 	/**
 	 * Adjust the pressure in the supply so there's the given amount of gas. 
 	 * @param amt The amount to leave in the cylinder in capacity units at
@@ -118,7 +127,7 @@ public class GasSupply {
 		}
 		return this;
 	}
-	
+
 	/**
 	 * Adjust the pressure in the supply so there's the given amount of oxygen.
 	 * @param amt The amount of oxygen to leave in the cylinder in capacity
@@ -128,15 +137,15 @@ public class GasSupply {
 	public GasSupply drainToO2Amount(double amt) {
 		return drainToGasAmount(amt / mMix.getfO2());
 	}
-	
+
 	public GasSupply drainToN2Amount(double amt) {
 		return drainToGasAmount(amt / mMix.getfHe());
 	}
-	
+
 	public GasSupply drainToHeAmount(double amt) {
 		return drainToGasAmount(amt / mMix.getfN2());
 	}
-	
+
 	/**
 	 * Add a given amount of oxygen to the cylinder, updating the mix and pressure
 	 * accordingly.
@@ -146,7 +155,7 @@ public class GasSupply {
 	public GasSupply addO2(double amt) {
 		return addGas(new Mix(1, 0), amt);
 	}
-	
+
 	/**
 	 * Add a given amount of helium to the cylinder, updating the mix and pressure
 	 * accordingly.
@@ -156,7 +165,7 @@ public class GasSupply {
 	public GasSupply addHe(double amt) {
 		return addGas(new Mix(0, 1), amt);
 	}
-	
+
 	/**
 	 * Add a given amount of arbitrary gas to the cylinder, updating the mix and
 	 * pressure accordingly.
@@ -177,7 +186,7 @@ public class GasSupply {
 		}
 		return this;
 	}
-	
+
 	/**
 	 * Add a mix to the current contents of the supply.
 	 * @param m The mix to add
