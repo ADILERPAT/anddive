@@ -56,9 +56,7 @@ public abstract class GasSource {
 	 * @return The equivalent air depth, rounded up to the nearest standard depth increment
 	 */
 	public float EAD(int depth, Units units) {
-		// This is the same computation as END without considering the narcotic effect of
-		// oxygen
-		return END(depth, units, false);
+		return Math.max(((int) Math.ceil((pN2AtDepth(depth, units) / 0.79f - 1) * units.depthPerAtm()) / units.depthIncrement()) * units.depthIncrement(), 0);
 	}
 
 	/**
@@ -70,8 +68,7 @@ public abstract class GasSource {
 	 */
 	public float END(int depth, Units units, boolean oxygenIsNarcotic) {
 		double pNarc = oxygenIsNarcotic? pO2AtDepth(depth, units) + pN2AtDepth(depth, units): pN2AtDepth(depth, units);
-		float pNarc0 = oxygenIsNarcotic? 1: 0.79f;
-		return Math.max(((int) Math.ceil((pNarc / pNarc0 - 1) * units.depthPerAtm()) / units.depthIncrement()) * units.depthIncrement(), 0);
+		return Math.max(((int) Math.ceil((pNarc - 1) * units.depthPerAtm()) / units.depthIncrement()) * units.depthIncrement(), 0);
 	}
 
 	/*public float computeCNS(int depth, Units units, float time, float currentCNS) throws CnsOtu.MaxPo2ExceededException {
