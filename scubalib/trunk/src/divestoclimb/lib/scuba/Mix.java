@@ -121,7 +121,7 @@ public class Mix extends GasSource {
 	 * @return The maximum operating depth in the current system of units, rounded down to the nearest standard depth increment
 	 */
 	public float MOD(Units units, float maxpO2) {
-		return ((int) Math.floor((maxpO2 / mO2 - 1) * units.depthPerAtm()) / units.depthIncrement()) * units.depthIncrement();
+		return ((int) Math.floor((maxpO2 / mO2 - 1) * units.depthPerAtm() + 0.01) / units.depthIncrement()) * units.depthIncrement();
 	}
 	
 	/**
@@ -132,7 +132,7 @@ public class Mix extends GasSource {
 	public float ceiling(float minpO2, Units units) {
 		// This function is nearly identical to MOD except we round up instead of
 		// down
-		return ((int) Math.ceil((minpO2 / mO2 - 1) * units.depthPerAtm()) / units.depthIncrement()) * units.depthIncrement();
+		return ((int) Math.ceil((minpO2 / mO2 - 1) * units.depthPerAtm() - 0.01) / units.depthIncrement()) * units.depthIncrement();
 	}
 	
 	/**
@@ -151,10 +151,11 @@ public class Mix extends GasSource {
 		if(fO2Best > 1) {
 			fO2Best = 1;
 		} else {
-			fO2Best = (float) (Math.floor(fO2Best * 100) / 100);
+			fO2Best = (float) (Math.floor(fO2Best * 100 + 0.0001) / 100);
 		}
 		maxEND = Math.min(depth, maxEND);
-		float fNarcBest = (float) (Math.floor((maxEND / dpa + 1) / pAbs * 100) / 100);
+		float pNarc0 = oxygenIsNarcotic? 1: 0.79f;
+		float fNarcBest = (float) (Math.floor((maxEND / dpa + 1) / pAbs * pNarc0 * 100 + 0.0001) / 100);
 		float fHeBest = 1 - (oxygenIsNarcotic? fNarcBest: fNarcBest + fO2Best);
 		if(fO2Best + fHeBest > 1) {
 			return null;
