@@ -2,6 +2,12 @@ package divestoclimb.android.database;
 
 import android.database.Cursor;
 
+/**
+ * @deprecated
+ * @author benr
+ *
+ * @param <T>
+ */
 public interface CursorObjectMapper<T> {
 	/**
 	 * Returns an object based on the data in the given Cursor at the

@@ -6,7 +6,7 @@ import java.util.ListIterator;
 import java.util.Stack;
 
 import android.database.Cursor;
-import divestoclimb.lib.data.BaseRecord;
+import divestoclimb.lib.data.Orderable;
 
 /**
  * An implementation of a List backed by an Android Cursor. It knows how to set
@@ -20,7 +20,7 @@ import divestoclimb.lib.data.BaseRecord;
  * @param <E> The type of BaseRecord included in the List. The elements must also
  * be of a class that implements Orderable.
  */
-public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends CursorCollection<E> implements List<E> {
+public class CursorList<E extends Orderable> extends CursorCollection<E> implements List<E> {
 
 	// The number to increment successive orders when appending to and reindexing the list.
 	public static final int STD_ORDER_INCREMENT = 16;
@@ -31,20 +31,39 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 	 * @param om An ObjectMapper implementation which can fetch the Orderable
 	 * that corresponds to a Cursor row.
 	 */
-	public CursorList(Cursor c, Object[] params, CursorObjectMapper<E> om, Binder<E> binder) {
-		super(c, params, om, binder);
+	public CursorList(Cursor c, ORMapper<E> om) {
+		super(c, om);
+	}
+
+	/**
+	 * Constructor
+	 * @param c The Cursor to reorder
+	 * @param om An ObjectMapper implementation which can fetch the Orderable
+	 * that corresponds to a Cursor row.
+	 * @param binder A Binder implementation that can associate and disassociate
+	 * records with this list
+	 */
+	public CursorList(Cursor c, ORMapper<E> om, Binder<E> binder) {
+		super(c, om, binder);
 	}
 	
 	@Override
 	public boolean add(E i) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorList");
+		}
 		binder.bind(this, i);
-		i.setOrder(get(cursor.getCount() - 1).getOrder() + STD_ORDER_INCREMENT).commit();
+		i.setOrder(get(cursor.getCount() - 1).getOrder() + STD_ORDER_INCREMENT);
+		mapper.save(i);
 		cursor.requery();
 		return true;
 	}
 
 	@Override
 	public void add(int index, E i) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorList");
+		}
 		// The idea here is to eliminate the need for reindexing the entire list in the
 		// database any time the user inserts a new record. If the database were using the
 		// Cursor position to determine order, we'd have to reindex the list on every insert.
@@ -55,7 +74,7 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 		// log2(STD_ORDER_INCREMENT) inserts happen in the same area.
 		try {
 			Cursor c = cursor;
-			CursorObjectMapper<E> om = mapper;
+			ORMapper<E> om = mapper;
 			binder.bind(this, i);
 			int order_prev, order;
 			c.moveToPosition(index);
@@ -72,10 +91,10 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 				// it's effectively getting removed from the list and reinserted so although its neighbors will
 				// end up at position - 1 and position, they are currently at position and position + 1. We take
 				// that into account here by choosing where we start the operation.
-				if(i.getOrder() == -1 || i.getOrder() > om.getObjectFromCursor(c, true).getOrder()) {
+				if(i.getOrder() == -1 || i.getOrder() > om.fetch(c, true).getOrder()) {
 					c.moveToPrevious();
 				}
-				order_prev = om.getObjectFromCursor(c, true).getOrder();
+				order_prev = om.fetch(c, true).getOrder();
 				// Now we move the cursor to the next position so we can detect the order
 				// of the next item.
 				c.moveToNext();
@@ -83,12 +102,13 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 
 			if(c.getPosition() == c.getCount()) {
 				// Trivial case. We're at the end of the list.
-				if(! i.setOrder(order_prev + STD_ORDER_INCREMENT).commit()) {
-					throw new Exception();
+				i.setOrder(order_prev + STD_ORDER_INCREMENT);
+				if(! om.save(i)) {
+					throw new RuntimeException("Save failed while reordering list");
 				}
 			} else {
 				// Now we have to detect the order of the item after us.
-				int order_next = om.getObjectFromCursor(c, true).getOrder();
+				int order_next = om.fetch(c, true).getOrder();
 
 				// Now see if we can find an order in between order_last and order_next
 				order = (order_next + order_prev) / 2;
@@ -99,7 +119,8 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 					return;
 				} else if(order < order_next && order > order_prev) {
 					// Normal scenario. Move the item.
-					if(! i.setOrder(order).commit()) {
+					i.setOrder(order);
+					if(! om.save(i)) {
 						throw new Exception();
 					}
 				} else {
@@ -108,8 +129,8 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 				
 					// Start with what i's new order will be.
 					int new_order = order_prev + STD_ORDER_INCREMENT;
-
-					if(! i.setOrder(new_order).commit()) {
+					i.setOrder(new_order);
+					if(! om.save(i)) {
 						throw new Exception();
 					}
 
@@ -120,7 +141,7 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 					s.push(i);
 					do {
 						// Retrieve the Item at this index
-						E it = om.getObjectFromCursor(c, false);
+						E it = om.fetch(c, false);
 						// If we encounter the original item we're "adding" it's because
 						// this item is really being moved. Skip it for now.
 						if(it.equals(i)) { continue; }
@@ -140,7 +161,7 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 
 					// Now save everything we changed
 					do {
-						if(! s.pop().commit()) {
+						if(! om.save(s.pop())) {
 							throw new Exception();
 						}
 					} while(! s.empty());
@@ -168,14 +189,14 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 			throw new IndexOutOfBoundsException();
 		}
 		cursor.moveToPosition(index);
-		return mapper.getObjectFromCursor(cursor, false);
+		return mapper.fetch(cursor, false);
 	}
 
 	@Override
 	public int indexOf(Object o) {
 		int i = 0;
 		for(cursor.moveToFirst(); ! cursor.isAfterLast(); cursor.moveToNext()) {
-			E item = mapper.getObjectFromCursor(cursor, false);
+			E item = mapper.fetch(cursor, false);
 			if(item.equals(o)) {
 				return i;
 			}
@@ -201,9 +222,12 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 
 	@Override
 	public E remove(int index) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorList");
+		}
 		cursor.moveToPosition(index);
-		final E obj = mapper.getObjectFromCursor(cursor, false);
-		if(this.binder.unbind(this, obj) && obj.commit()) {
+		final E obj = mapper.fetch(cursor, false);
+		if(this.binder.unbind(this, obj) && mapper.save(obj)) {
 			cursor.requery();
 		}
 		return obj;
@@ -211,6 +235,9 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 
 	@Override
 	public E set(int index, E element) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorList");
+		}
 		if(index < 0 || index >= cursor.getCount()) {
 			throw new IndexOutOfBoundsException();
 		}
@@ -218,7 +245,7 @@ public class CursorList<E extends BaseRecord & BaseRecord.Orderable<?>> extends 
 		binder.bind(this, element);
 		element.setOrder(currentElement.getOrder());
 		binder.unbind(this, currentElement);
-		element.commit();
+		mapper.save(element);
 		cursor.requery();
 		return currentElement;
 	}

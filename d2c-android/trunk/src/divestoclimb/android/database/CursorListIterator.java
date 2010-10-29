@@ -5,9 +5,9 @@ import java.util.NoSuchElementException;
 
 import android.database.Cursor;
 
-import divestoclimb.lib.data.BaseRecord;
+import divestoclimb.lib.data.Orderable;
 
-public class CursorListIterator<E extends BaseRecord & BaseRecord.Orderable<?>> extends CursorIterator<E>
+public class CursorListIterator<E extends Orderable> extends CursorIterator<E>
 		implements ListIterator<E> {
 
 	private CursorList<E> cursorList;
@@ -55,7 +55,7 @@ public class CursorListIterator<E extends BaseRecord & BaseRecord.Orderable<?>> 
 		}
 		c.moveToPosition(-- position);
 		removed = false;
-		return cursorList.mapper.getObjectFromCursor(c, true);
+		return cursorList.mapper.fetch(c, true);
 	}
 
 	@Override

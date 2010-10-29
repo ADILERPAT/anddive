@@ -5,21 +5,25 @@ import java.util.NoSuchElementException;
 
 import android.database.Cursor;
 
-import divestoclimb.lib.data.BaseRecord;
-
-public class CursorIterator<T extends BaseRecord> implements Iterator<T> {
+public class CursorIterator<T> implements Iterator<T> {
 
 	private CursorCollection<T> cursorColl;
 	protected int position = -1;
 	protected boolean removed = false;
+	protected boolean useFlyweight;
 
 	public CursorIterator(CursorCollection<T> c) {
+		this(c, true);
+	}
+
+	public CursorIterator(CursorCollection<T> c, boolean useFlyweight) {
 		cursorColl = c;
+		this.useFlyweight = useFlyweight;
 	}
 
 	@Override
 	public boolean hasNext() {
-		return position < cursorColl.cursor.getCount();
+		return position < cursorColl.cursor.getCount() - 1;
 	}
 
 	@Override
@@ -30,7 +34,7 @@ public class CursorIterator<T extends BaseRecord> implements Iterator<T> {
 		}
 		c.moveToPosition(removed? position: ++position);
 		removed = false;
-		return cursorColl.mapper.getObjectFromCursor(c, true);
+		return cursorColl.mapper.fetch(c, useFlyweight);
 	}
 
 	@Override
@@ -40,7 +44,7 @@ public class CursorIterator<T extends BaseRecord> implements Iterator<T> {
 		}
 		Cursor c = cursorColl.cursor;
 		c.moveToPosition(position);
-		cursorColl.binder.unbind(cursorColl, cursorColl.mapper.getObjectFromCursor(c, true));
+		cursorColl.binder.unbind(cursorColl, cursorColl.mapper.fetch(c, useFlyweight));
 		c.requery();
 		removed = true;
 	}

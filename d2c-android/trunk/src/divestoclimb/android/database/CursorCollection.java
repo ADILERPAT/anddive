@@ -6,8 +6,6 @@ import java.util.Iterator;
 
 import android.database.Cursor;
 
-import divestoclimb.lib.data.BaseRecord;
-
 /**
  * A Collection implementation backed by an Android Cursor. A CursorObjectMapper
  * is used to map the Collection's elements from Cursor records. Since the elements'
@@ -20,24 +18,31 @@ import divestoclimb.lib.data.BaseRecord;
  * this.
  * @author Ben Roberts (divestoclimb@gmail.com)
  *
- * @param <E> The type of BaseRecord that's included in this Collection
+ * @param <E> The type of object that's included in this Collection
  */
-public abstract class CursorCollection<E extends BaseRecord> implements Collection<E> {
+public abstract class CursorCollection<E> implements Collection<E> {
 	
 	protected Cursor cursor;
-	protected CursorObjectMapper<E> mapper;
-	protected Object[] params;
+	protected ORMapper<E> mapper;
 	protected Binder<E> binder;
+	protected boolean useFlyweightInIterator;
 	
-	public CursorCollection(Cursor c, Object[] params, CursorObjectMapper<E> mapper, Binder<E> binder) {
-		cursor = c;
-		this.mapper = mapper;
-		this.params = params;
-		this.binder = binder;
+	public CursorCollection(Cursor c, ORMapper<E> mapper) {
+		this(c, mapper, null);
+	}
+
+	public CursorCollection(Cursor c, ORMapper<E> mapper, Binder<E> binder) {
+		this(c, mapper, binder, true);
 	}
 	
-	public Object[] getParams() {
-		return params;
+	public CursorCollection(Cursor c, ORMapper<E> mapper, Binder<E> binder, boolean useFlyweightInIterator) {
+		if(c == null) {
+			throw new NullPointerException("cursor is null");
+		}
+		cursor = c;
+		this.mapper = mapper;
+		this.binder = binder;
+		this.useFlyweightInIterator = useFlyweightInIterator;
 	}
 	
 	public Cursor getCursor() {
@@ -53,7 +58,7 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 	 *
 	 * @param <T> The record type
 	 */
-	public static interface Binder<T extends BaseRecord> {
+	public static interface Binder<T> {
 		/**
 		 * Associate the given record with a CursorCollection.
 		 * Call getParams() on the CursorCollection to get the
@@ -92,11 +97,13 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 
 	@Override
 	public boolean add(E e) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorCollection");
+		}
 		if(contains(e)) {
 			return false;
 		} else {
-			boolean result = binder.bind(this, e);
-			e.commit();
+			boolean result = binder.bind(this, e) && mapper.save(e);
 			if(result) {
 				cursor.requery();
 			}
@@ -115,25 +122,45 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 
 	@Override
 	public void clear() {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorCollection");
+		}
 		this.binder.unbindAll(this);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean contains(Object o) {
+		E testObj;
+		try {
+			testObj = (E)o;
+		} catch(ClassCastException e) {
+			// Can't possibly be in the list
+			return false;
+		}
+		// FIXME build custom iterator to bypass possible non-flyweight handling
 		for(E i : this) {
-			if(i.equals(o)) {
+			if(mapper.objectsEqual(i, testObj)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean containsAll(Collection<?> c) {
+		E testObj;
 		// TODO Is this the most efficient way?
+		// FIXME build custom iterator to bypass possible non-flyweight handling
 	coll: for(Object o : c) {
+			try {
+				testObj = (E)o;
+			} catch(ClassCastException e) {
+				return false;
+			}
 			for(E i : this) {
-				if(i.equals(o)) {
+				if(mapper.objectsEqual(i, testObj)) {
 					continue coll;
 				}
 			}
@@ -146,18 +173,29 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 
 	@Override
 	public boolean isEmpty() {
-		return cursor.getCount() == 0;
+		return cursor == null || cursor.getCount() == 0;
 	}
 
 	@Override
 	public Iterator<E> iterator() {
-		return new CursorIterator<E>(this);
+		return new CursorIterator<E>(this, useFlyweightInIterator);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean remove(Object o) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorCollection");
+		}
+		E testObj;
+		try {
+			testObj = (E)o;
+		} catch(ClassCastException e) {
+			// Can't possibly be in the list
+			return false;
+		}
 		for(E i : this) {
-			if(i.equals(o)) {
+			if(mapper.objectsEqual(i, testObj)) {
 				boolean result = this.binder.unbind(this, i);
 				if(result) {
 					cursor.requery();
@@ -170,6 +208,9 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorCollection");
+		}
 		boolean result = false;
 		for(E i : this) {
 			if(c.contains(i)) {
@@ -184,6 +225,9 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 
 	@Override
 	public boolean retainAll(Collection<?> c) {
+		if(binder == null) {
+			throw new IllegalStateException("No binder defined on this CursorCollection");
+		}
 		boolean result = false;
 		for(E i : this) {
 			if(! c.contains(i)) {
@@ -211,7 +255,7 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 		// iterate the cursor manually
 		int i = 0;
 		for(cursor.moveToFirst(); ! cursor.isAfterLast(); cursor.moveToNext()) {
-			result[i ++] = mapper.getObjectFromCursor(cursor, false);
+			result[i ++] = mapper.fetch(cursor, false);
 		}
 		return result;
 	}
@@ -228,7 +272,7 @@ public abstract class CursorCollection<E extends BaseRecord> implements Collecti
 		}
 		int i = 0;
 		for(cursor.moveToFirst(); ! cursor.isAfterLast(); cursor.moveToNext()) {
-			result[i ++] = mapper.getObjectFromCursor(cursor, false);
+			result[i ++] = mapper.fetch(cursor, false);
 		}
 		if(a.length > cursor.getCount()) {
 			result[i] = null;

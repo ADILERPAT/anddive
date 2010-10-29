@@ -2,7 +2,7 @@ package divestoclimb.android.widget;
 
 import java.util.WeakHashMap;
 
-import divestoclimb.android.database.CursorObjectMapper;
+import divestoclimb.android.database.ORMapper;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -22,7 +22,7 @@ import android.widget.ResourceCursorAdapter;
 public class ObjectMappedCursorAdapter<T> extends ResourceCursorAdapter {
 
 	protected int[] mViewsToBind;
-	protected CursorObjectMapper<T> mObjectMapper;
+	protected ORMapper<T> mObjectMapper;
 	protected ViewBinder<T> mViewBinder;
 	protected WeakHashMap<View, View[]> mHolders = new WeakHashMap<View, View[]>();
 
@@ -40,7 +40,7 @@ public class ObjectMappedCursorAdapter<T> extends ResourceCursorAdapter {
 	 * 				view from viewsToBind with data from the row's object
 	 */
 	public ObjectMappedCursorAdapter(Context context, int layout, Cursor c,
-			int[] viewsToBind, CursorObjectMapper<T> objectMapper, ViewBinder<T> viewBinder) {
+			int[] viewsToBind, ORMapper<T> objectMapper, ViewBinder<T> viewBinder) {
 		super(context, layout, c);
 		mViewsToBind = viewsToBind;
 		mObjectMapper = objectMapper;
@@ -73,14 +73,14 @@ public class ObjectMappedCursorAdapter<T> extends ResourceCursorAdapter {
 
 	/**
 	 * Binds all of the views passed in the "viewsToBind" parameter of the
-	 * constructor via the ObjectMapper and ViewBinder.
+	 * constructor via the ORMapper and ViewBinder.
 	 */
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 		final View[] holder = mHolders.get(view);
 		final ViewBinder<T> viewBinder = mViewBinder;
 		final int count = mViewsToBind.length;
-		T obj = mObjectMapper.getObjectFromCursor(cursor, true);
+		T obj = mObjectMapper.fetch(cursor, true);
 		
 		for(int i = 0; i < count; i ++) {
 			viewBinder.setViewValue(holder[i], obj);
