@@ -4,6 +4,7 @@ package divestoclimb.lib.data;
  * A class that handles common logic for any type of data record
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
+@Deprecated
 public abstract class BaseRecord {
 
 	public static final long NO_ID = -1;

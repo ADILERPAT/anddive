@@ -5,6 +5,7 @@ package divestoclimb.lib.data;
  * unique integer key
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
+@Deprecated
 public abstract class Record extends BaseRecord {
 
 	/**
