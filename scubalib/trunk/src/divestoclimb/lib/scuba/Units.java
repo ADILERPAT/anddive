@@ -1,5 +1,7 @@
 package divestoclimb.lib.scuba;
 
+import java.io.Serializable;
+
 /**
  * This class is a container for a bunch of methods which are
  * dependent on the current system of units in use in a SCUBA application.
@@ -18,8 +20,10 @@ package divestoclimb.lib.scuba;
  * unit is you're dealing with.
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public class Units {
-	
+public class Units implements Serializable {
+
+	private static final long serialVersionUID = 2593873860406673122L;
+
 	// The unit systems for this app
 	public static final int IMPERIAL = 0;
 	public static final int METRIC = 1;
@@ -39,7 +43,7 @@ public class Units {
 	// argument was passed)
 	public boolean change(int u) {
 		if(u == IMPERIAL || u == METRIC) {
-			unitSystem=u;
+			unitSystem = u;
 			return true;
 		} else {
 			return false;
