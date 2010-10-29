@@ -1,12 +1,19 @@
 package divestoclimb.lib.scuba;
 
-import divestoclimb.lib.data.Record;
+import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * A class that represents a gas cylinder (or a manifolded set of cylinders)
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public class Cylinder extends Record {
+public class Cylinder implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private Long id;
+
 	// The total physical volume of the cylinder(s)
 	// Internal volume is stored in standard "capacity units" for the defined
 	// unit system. Some unit systems (i.e. Imperial) have special units that
@@ -18,6 +25,18 @@ public class Cylinder extends Record {
 	private int mServicePressure;
 	
 	private String mName;
+	
+	private int type = 0;
+
+	private String serialNumber;
+	
+	public static final int TYPE_GENERIC = 0;
+	public static final int TYPE_SPECIFIC = 1;
+	
+	private Date lastHydro, lastVisual;
+	private Integer hydroIntervalYears, visualIntervalMonths;
+	
+	private static int defHydroIntervalYears = 5, defVisualIntervalMonths = 12;
 
 	private Units mUnits;
 
@@ -29,29 +48,28 @@ public class Cylinder extends Record {
 	 * @param service_pressure Service pressure of the cylinder
 	 */
 	public Cylinder(Units units, float internal_volume, int service_pressure) {
-		super();
 		mUnits = units;
 		mInternalVolume = internal_volume;
 		mServicePressure = service_pressure;
 	}
 	
 	public Cylinder(Units units, long id, String name, float internal_volume, int service_pressure) {
-		super(id);
 		mUnits = units;
 		mName = name;
 		mInternalVolume = internal_volume;
 		mServicePressure = service_pressure;
 	}
 	
-	public void reset(long id, String name, float internal_volume, int service_pressure) {
-		super.reset(id);
-		mName = name;
-		mInternalVolume = internal_volume;
-		mServicePressure = service_pressure;
+	public void setId(long id) {
+		this.id = id;
 	}
-	
+
+	public Long getId() {
+		return id;
+	}
+
 	public String getName() { return mName; }
-	public Cylinder setName(String name) { if(mName != name) { mName = name; mDirty = true; } return this; }
+	public Cylinder setName(String name) { mName = name; return this; }
 
 	/**
 	 * Build a Cylinder object with a capacity instead of an internal volume
@@ -91,7 +109,6 @@ public class Cylinder extends Record {
 	
 	public Cylinder setIdealCapacity(float capacity) {
 		mInternalVolume = capacity * mUnits.pressureAtm() / mServicePressure;
-		mDirty = true;
 		return this;
 	}
 
@@ -127,7 +144,6 @@ public class Cylinder extends Record {
 		} while(Math.abs(v0 - v1) >= uncertainty);
 		
 		mInternalVolume = (float)(v1 * n);
-		mDirty = true;
 		return this;
 	}
 
@@ -141,7 +157,6 @@ public class Cylinder extends Record {
 
 	public Cylinder setInternalVolume(float internal_volume) {
 		mInternalVolume = internal_volume;
-		mDirty = true;
 		return this;
 	}
 
@@ -151,8 +166,39 @@ public class Cylinder extends Record {
 
 	public Cylinder setServicePressure(int service_pressure) {
 		mServicePressure = service_pressure;
-		mDirty = true;
 		return this;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public void setSerialNumber(String serialNumber) {
+		this.serialNumber = serialNumber;
+	}
+
+	public String getSerialNumber() {
+		return serialNumber;
+	}
+	
+	public void setLastHydro(Date lastHydro) {
+		this.lastHydro = lastHydro;
+	}
+
+	public Date getLastHydro() {
+		return lastHydro;
+	}
+
+	public Date getLastVisual() {
+		return lastVisual;
+	}
+
+	public void setLastVisual(Date lastVisual) {
+		this.lastVisual = lastVisual;
 	}
 
 	public double getIdealCapacityAtPressure(double pressure) {
@@ -231,5 +277,77 @@ public class Cylinder extends Record {
 		double v = mInternalVolume * RT / (mUnits.pressureAtm() * capacity),
 				a = m.getA(), b = m.getB();
 		return RT / (v - b) - a / (v * v);
+	}
+	
+	public static void setDefHydroInterval(int years) {
+		defHydroIntervalYears = years;
+	}
+	
+	public static void setDefVisualInterval(int months) {
+		defVisualIntervalMonths = months;
+	}
+	
+	public void setHydroInterval(Integer years) {
+		hydroIntervalYears = years;
+	}
+	
+	public Integer getHydroInterval() {
+		return hydroIntervalYears;
+	}
+	
+	public void setVisualInterval(Integer months) {
+		visualIntervalMonths = months;
+	}
+	
+	public Integer getVisualInterval() {
+		return visualIntervalMonths;
+	}
+	
+	public boolean isHydroExpired() {
+		if(lastHydro == null) {
+			return false;
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(lastHydro);
+		cal.add(Calendar.YEAR, hydroIntervalYears != null? hydroIntervalYears: defHydroIntervalYears);
+		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+		cal.set(Calendar.HOUR_OF_DAY, cal.getActualMaximum(Calendar.HOUR_OF_DAY));
+		cal.set(Calendar.MINUTE, cal.getActualMaximum(Calendar.MINUTE));
+		cal.set(Calendar.SECOND, cal.getActualMaximum(Calendar.SECOND));
+		return new Date().after(cal.getTime());
+	}
+	
+	public boolean isVisualExpired() {
+		if(lastVisual == null) {
+			return false;
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(lastVisual);
+		cal.add(Calendar.MONTH, visualIntervalMonths != null? visualIntervalMonths: defVisualIntervalMonths);
+		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+		cal.set(Calendar.HOUR_OF_DAY, cal.getActualMaximum(Calendar.HOUR_OF_DAY));
+		cal.set(Calendar.MINUTE, cal.getActualMaximum(Calendar.MINUTE));
+		cal.set(Calendar.SECOND, cal.getActualMaximum(Calendar.SECOND));
+		return new Date().after(cal.getTime());
+	}
+	
+	public boolean doesHydroExpireThisMonth() {
+		if(lastHydro == null) {
+			return false;
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(lastHydro);
+		cal.add(Calendar.YEAR, hydroIntervalYears != null? hydroIntervalYears: defHydroIntervalYears);
+		return new Date().after(cal.getTime());
+	}
+	
+	public boolean doesVisualExpireThisMonth() {
+		if(lastVisual == null) {
+			return false;
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(lastVisual);
+		cal.add(Calendar.MONTH, visualIntervalMonths != null? visualIntervalMonths: defVisualIntervalMonths);
+		return new Date().after(cal.getTime());
 	}
 }
