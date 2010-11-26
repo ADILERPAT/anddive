@@ -125,7 +125,7 @@ public class Units implements Serializable {
 	// the application.
 	private static final int pressure_tank_low[] = { 700, 50 };
 	private static final int pressure_tank_full[] = { 3000, 207 };
-	private static final int pressure_tank_max[] = { 4500, 300 };
+	private static final int pressure_tank_max[] = { 4500, 400 };
 	
 	// Common cylinder service pressures that are outside of the default
 	// increment
