@@ -8,6 +8,7 @@ import java.util.Date;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 
 public abstract class ORMapper<T> extends AbsMapper<T> {
 
@@ -101,7 +102,11 @@ public abstract class ORMapper<T> extends AbsMapper<T> {
 				continue;
 			if(isIgnored(name.substring(3)))
 				continue;
-			columnToField(c, instance, methods[i]);
+			try {
+				columnToField(c, instance, methods[i]);
+			} catch(IllegalArgumentException e) {
+				continue;
+			}
 		}
 		// Look for a reset method. If it exists, call it.
 		resetDirty(instance);
@@ -320,11 +325,15 @@ public abstract class ORMapper<T> extends AbsMapper<T> {
 		ContentValues values = new ContentValues();
 		boolean phantom = isPhantom(o);
 		flatten(o, values, phantom);
-		boolean result = phantom? doCreate(o, values): doUpdate(o, values);
-		if(result) {
-			resetDirty(o);
+		try {
+			boolean result = phantom? doCreate(o, values): doUpdate(o, values);
+			if(result) {
+				resetDirty(o);
+			}
+			return result;
+		} catch(SQLiteConstraintException e) {
+			return false;
 		}
-		return result;
 	}
 	
 	/**
