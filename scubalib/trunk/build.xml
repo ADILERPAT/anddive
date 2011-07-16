@@ -3,7 +3,7 @@
 
 	<property name="src.dir" value="src"/>
 	<property name="lib.dir" value="libs"/>
-	<property name="out.dir" value="bin"/>
+	<property name="out.dir" value="build"/>
 	<property name="classes.dir" value="classes"/>
 
 	<path id="classpath">
