@@ -1,0 +1,21 @@
+Building ScubaLib from source requires a basic working knowledge of
+compiling Java projects on your system and using a command line (DOS or Unix).
+
+Dependencies
+------------
+You will need the following software tools to build Core:
+- A JDK compatible with Java 1.6 or later (Oracle, OpenJDK, Blackdown, etc.)
+- Apache Ant (http://ant.apache.org)
+
+Code Dependencies
+-----------------
+- Core from my andDive project's SVN: http://code.google.com/p/anddive
+
+See the build instructions included with Core to produce a jar. Then copy or
+symlink that jar in the "libs" directory of this project.
+
+Building
+--------
+Once your environment is set up, you can use ant to
+compile the project. On a command line in the top-level Core directory,
+type "ant" to build a jar that will be placed in "bin/ScubaLib.jar"
