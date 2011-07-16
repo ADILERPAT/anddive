@@ -1,5 +1,6 @@
 package divestoclimb.android.widget;
 
+import divestoclimb.android.R;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Parcel;
@@ -16,28 +17,28 @@ import android.widget.TextView;
  * A DialogPreference containing a single NumberSelector
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public class BaseNumberPreference extends DialogPreference {
-	protected BaseNumberSelector mNumberSelector;
+public class NumberPreference extends DialogPreference {
+	protected NumberSelector mNumberSelector;
 	private LinearLayout mLayout;
 	protected TextView mUnitLabel;
 	private boolean mLayoutInit;
 
 	private float mValue;
 
-	public BaseNumberPreference(Context context, ResourceReader reader, AttributeSet attrs, int defStyle) {
+	public NumberPreference(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 
 		// Initialize our views that make up the content of the dialog.
 		// We reuse the same instance of the layout each time the dialog
 		// is closed and opened.
-		mNumberSelector = new BaseNumberSelector(context, reader, attrs);
+		mNumberSelector = new NumberSelector(context, attrs);
 		mLayout = new LinearLayout(context);
 		mLayout.setGravity(Gravity.CENTER);
 
 		// Read our custom attributes
-		TypedArray a = reader.getNPStyledAttributes(context, attrs);
+		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.NumberPreference);;
 		mUnitLabel = new TextView(context);
-		String label = reader.readNPUnitLabel(a);
+		String label = a.getString(R.styleable.NumberPreference_unitLabel);
 		if(label != null) {
 			mUnitLabel.setText(label);
 		}
@@ -48,17 +49,12 @@ public class BaseNumberPreference extends DialogPreference {
 		mLayoutInit = false;
 	}
 
-	public BaseNumberPreference(Context context, ResourceReader reader, AttributeSet attrs) {
-		this(context, reader, attrs, android.R.attr.dialogPreferenceStyle);
+	public NumberPreference(Context context, AttributeSet attrs) {
+		this(context, attrs, android.R.attr.dialogPreferenceStyle);
 	}
 	
-	public BaseNumberPreference(Context context, ResourceReader reader) {
-		this(context, reader, null);
-	}
-
-	public static interface ResourceReader extends BaseNumberSelector.ResourceReader {
-		abstract TypedArray getNPStyledAttributes(Context context, AttributeSet attrs);
-		abstract String readNPUnitLabel(TypedArray a);
+	public NumberPreference(Context context) {
+		this(context, null);
 	}
 
 	public void setValue(float value) {
@@ -117,7 +113,7 @@ public class BaseNumberPreference extends DialogPreference {
 		mValue = restoreValue? getPersistedFloat(mValue): (Float)defaultValue;
 	}
 	
-	public BaseNumberSelector getNumberSelector() {
+	public NumberSelector getNumberSelector() {
 		return mNumberSelector;
 	}
 	

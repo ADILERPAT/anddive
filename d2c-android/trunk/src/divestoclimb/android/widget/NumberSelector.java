@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import divestoclimb.android.R;
 import divestoclimb.android.util.ViewId;
 
 import android.content.Context;
@@ -30,41 +31,7 @@ import android.widget.LinearLayout;
  * A custom widget that shows an EditText View surrounded by plus and minus buttons.
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public class BaseNumberSelector extends LinearLayout implements View.OnClickListener, TextWatcher {
-	/**
-	 * Because this class gets exported in a JAR to other Android apps, it can't
-	 * directly reference an Android resource object. The architecture I've chosen
-	 * to handle this problem uses the following interface that handles making all
-	 * calls that require knowing a specific attribute. In order to use this
-	 * widget in an application, you must subclass BaseNumberSelector and provide
-	 * constructors which pass an implementation of this interface.
-	 * 
-	 * An alternative architecture would have been to make BaseNumberSelector an
-	 * abstract class with the following as abstract methods, however this makes
-	 * implementations of subclasses messy. Suppose I wrote a subclass of
-	 * BaseNumberSelector, for instance BaseIntegerSelector. If an application
-	 * wanted to be able to use both instances and they shared many of the same
-	 * Android resource attributes, it would be necessary to build two classes
-	 * containing parallel implementations to look up those resources. With the
-	 * current architecture that's not a problem; just build a single
-	 * ResourceReader implementation class and add instances of it to each
-	 * application subclass's constructor.
-	 * @author Ben Roberts (divestoclimb@gmail.com)
-	 */
-	public static interface ResourceReader {
-		abstract int getNSLayout();
-		abstract TypedArray getNSStyledAttributes(Context context, AttributeSet attrs);
-
-		abstract float readNSIncrement(TypedArray a, float defaultValue);
-		abstract float readNSLowerLimit(TypedArray a, float defaultValue);
-		abstract Float readNSUpperLimit(TypedArray a, Float defaultValue);
-		abstract int readNSDecimalPlaces(TypedArray a, int defaultValue);
-		abstract int readNSTextBoxWidth(TypedArray a, int defaultValue);
-
-		abstract int getNSPlusButtonId();
-		abstract int getNSMinusButtonId();
-		abstract int getNSEditTextId();
-	}
+public class NumberSelector extends LinearLayout implements View.OnClickListener, TextWatcher {
 
 	public static interface ValueChangedListener {
 		/**
@@ -73,7 +40,7 @@ public class BaseNumberSelector extends LinearLayout implements View.OnClickList
 		 * @param new_val The new value
 		 * @param from_user Set to true if the user manipulated the value manually.
 		 */
-		abstract void onChange(BaseNumberSelector ns, Float new_val, boolean from_user);
+		abstract void onChange(NumberSelector ns, Float new_val, boolean from_user);
 	}
 
 	private ImageButton mMinusButton, mPlusButton;
@@ -88,25 +55,27 @@ public class BaseNumberSelector extends LinearLayout implements View.OnClickList
 
 	// Constructors
 
-	public BaseNumberSelector(Context context, ResourceReader reader) {
+	public NumberSelector(Context context) {
 		super(context);
-		initNumberSelector(context, reader);
+		initNumberSelector(context);
 	}
 
-	public BaseNumberSelector(Context context, ResourceReader reader, AttributeSet attrs) {
+	public NumberSelector(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		initNumberSelector(context, reader);
-		TypedArray a = reader.getNSStyledAttributes(context, attrs);
+		initNumberSelector(context);
+		TypedArray a = context.obtainStyledAttributes(attrs,
+				R.styleable.NumberSelector);
 
-		int textWidth = reader.readNSTextBoxWidth(a, 0);
+		int textWidth = a.getDimensionPixelSize(R.styleable.NumberSelector_textboxwidth, 0);
 		if(textWidth > 0) {
 			mEditText.setWidth(textWidth);
 		}
 
-		mIncrement = reader.readNSIncrement(a, 1);
-		mLowerLimit = reader.readNSLowerLimit(a, 0);
-		mUpperLimit = reader.readNSUpperLimit(a, null);
-		setDecimalPlaces(reader.readNSDecimalPlaces(a, 0));
+		mIncrement = a.getFloat(R.styleable.NumberSelector_increment, 1);
+		mLowerLimit = a.getFloat(R.styleable.NumberSelector_lowerlimit, 0);
+		mUpperLimit = a.hasValue(R.styleable.NumberSelector_upperlimit)?
+				a.getFloat(R.styleable.NumberSelector_upperlimit, 0): null;
+		setDecimalPlaces(a.getInt(R.styleable.NumberSelector_decimalplaces, 0));
 
 		a.recycle();
 	}
@@ -178,9 +147,9 @@ public class BaseNumberSelector extends LinearLayout implements View.OnClickList
 		mNonIncrementValues = vals;
 	}
 
-	protected void initNumberSelector(Context context, ResourceReader reader) {
+	protected void initNumberSelector(Context context) {
 		LayoutInflater i = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		i.inflate(reader.getNSLayout(), this);
+		i.inflate(R.layout.num_selector, this);
 
 		// This is a workaround originally for a bug that was caused by the EditText
 		// restoring its state via the setText() method, bypassing our API. This
@@ -190,9 +159,9 @@ public class BaseNumberSelector extends LinearLayout implements View.OnClickList
 		// is fine.
 		mChangeFromUser = false;
 
-		mPlusButton = (ImageButton)findViewById(reader.getNSPlusButtonId());
-		mMinusButton = (ImageButton)findViewById(reader.getNSMinusButtonId());
-		mEditText = (EditText)findViewById(reader.getNSEditTextId());
+		mPlusButton = (ImageButton)findViewById(R.id.plus);
+		mMinusButton = (ImageButton)findViewById(R.id.minus);
+		mEditText = (EditText)findViewById(R.id.text1);
 		// We can't keep the text1 ID because it would conflict with other instances
 		// of this class and screw up saving/restoring the EditText's state.
 		// Instead we have to give the EditText a random ID, then save and
@@ -335,7 +304,7 @@ public class BaseNumberSelector extends LinearLayout implements View.OnClickList
 		@Override
 		public void handleMessage(Message msg) {
 			if(msg.what == ACTION_SETFROMCACHE) {
-				BaseNumberSelector.this.setValue(mCachedValue);
+				NumberSelector.this.setValue(mCachedValue);
 			}
 		}
 	};
@@ -366,7 +335,7 @@ public class BaseNumberSelector extends LinearLayout implements View.OnClickList
 			// If we got here, everything went fine. Call our change listener if we
 			// have one.
 			if(mValueChangedListener != null) {
-				BaseNumberSelector.this.mValueChangedListener.onChange(BaseNumberSelector.this, mCachedValue, mChangeFromUser);
+				NumberSelector.this.mValueChangedListener.onChange(NumberSelector.this, mCachedValue, mChangeFromUser);
 			}
 		} catch(Exception e) {
 			// Don't reset the value immediately; this can be annoying if
@@ -377,7 +346,7 @@ public class BaseNumberSelector extends LinearLayout implements View.OnClickList
 			mValidateHandle = scheduler.schedule(new Runnable() {
 				public void run() {
 					Message m = Message.obtain();
-					m.what = BaseNumberSelector.ACTION_SETFROMCACHE;
+					m.what = NumberSelector.ACTION_SETFROMCACHE;
 					mMessageHandler.sendMessage(m);
 				}
 			}, 2, TimeUnit.SECONDS);
