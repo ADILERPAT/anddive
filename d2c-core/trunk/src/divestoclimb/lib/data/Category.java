@@ -1,25 +1,35 @@
 package divestoclimb.lib.data;
 
-public class Category extends Record {
+public class Category {
+	private Long id;
 	protected String mName;	// The name of this category
+	protected boolean mDirty = false;
 	
 	// Getters and setters
-	public String getName() { return mName; }
-	public Category setName(String name) { if(mName != name) { mName = name; mDirty = true; } return this; }
-	
-	// Constructor for creating a new category
-	public Category(String name) {
-		super();
-		mName = name;
+	public Long getId() {
+		return id;
+	}
+	public void setId(long id) {
+		this.id = id;
+	}
+	public String getName() {
+		return mName;
+	}
+	public void setName(String name) {
+		if(! mName.equals(name)) {
+			mName = name;
+			mDirty = true;
+		}
 	}
 	
-	public Category(long id, String name) {
-		super(id);
-		mName = name;
+	public Category() {
 	}
 	
-	public void reset(long id, String name) {
-		super.reset(id);
-		mName = name;
+	public boolean isDirty() {
+		return mDirty;
+	}
+	
+	public void resetDirty() {
+		mDirty = false;
 	}
 }
