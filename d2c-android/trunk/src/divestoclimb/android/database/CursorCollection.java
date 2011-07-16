@@ -49,6 +49,10 @@ public abstract class CursorCollection<E> implements Collection<E> {
 		return cursor;
 	}
 	
+	public ORMapper<E> getMapper() {
+		return mapper;
+	}
+	
 	/**
 	 * A Binder handles database-specific tasks for a CursorCollection,
 	 * specifically how to associate a record with a given Collection.
