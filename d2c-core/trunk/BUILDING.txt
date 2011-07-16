@@ -15,4 +15,4 @@ Building
 --------
 Once your environment is set up, you can use ant to
 compile the project. On a command line in the top-level Core directory,
-type "ant" to build a jar that will be placed in "bin/Core.jar"
+type "ant" to build a jar that will be placed in "build/Core.jar"
