@@ -1,6 +1,6 @@
 package divestoclimb.lib.scuba;
 
-public interface DecoAlgorithm<E extends ProfileItem> {
+public interface DecoAlgorithm {
 
 	// TODO: at least some of this data should be encapsulated in a DecoSettings class
 	// to make it easier to add to in the future without breaking legacy implementations
@@ -11,12 +11,12 @@ public interface DecoAlgorithm<E extends ProfileItem> {
 	 * ascent/descent at the configured rate to the desired depth, checking if
 	 * decompression will be required before reaching it. The class's internal
 	 * compartment state should be according to the end of the time passed.
-	 * @param item The ProfileItem to process
+	 * @param item The non-raw ProfileItem to process
 	 * @return An empty array if the calculation went uneventfully. If mandatory
 	 * stops are required before reaching the given depth, they are returned
 	 * as ProfileItems.
 	 */
-	public E[] run(E item);
+	public ProfileItem[] run(ProfileItem item);
 
 	/**
 	 * perform a run of the deco algorithm to ascend to the surface, checking if
@@ -26,7 +26,7 @@ public interface DecoAlgorithm<E extends ProfileItem> {
 	 * stops are required before reaching the surface, they are returned as
 	 * ProfileItems.
 	 */
-	public E[] surface();
+	public ProfileItem[] surface();
 	
 	/**
 	 * Perform a run of the deco algorithm for a diver out of the water. The diver

@@ -1,13 +1,14 @@
 package divestoclimb.lib.scuba;
 
-// FIXME: I don't remember why I wrote it this way, but I don't think this
-// has to be a template class. I should just be able to use ProfileItem
-// everywhere and have it work fine.
-public abstract class ProfileIterator<E extends ProfileItem> {
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+
+public class ProfileIterator {
 
 	// A ProfileItem with all inherited attributes filled in from scanning
 	// the previous items, representing the current item
-	private E mCurrentLine;
+	private ProfileItem mCurrentLine;
 	private int mPosition;
 	protected Dive mDive;
 
@@ -61,10 +62,6 @@ public abstract class ProfileIterator<E extends ProfileItem> {
 	public boolean moveToFirst() {
 		return moveToPosition(0);
 	}
-	
-	public boolean moveToLast() {
-		return moveToPosition(getCount());
-	}
 
 	/**
 	 * Moves the Profile position to the next active line
@@ -73,12 +70,13 @@ public abstract class ProfileIterator<E extends ProfileItem> {
 	 */
 	public boolean moveToNext() {
 		do {
+			List<ProfileItem> profile = mDive.getProfile();
 			// Fetch the next ProfileItem and merge its values with mPreviousState
-			if(mPosition + 1 >= getCount()) {
+			if(mPosition + 1 >= profile.size()) {
 				// No more items
 				return false;
 			}
-			final E next = getItemAtPosition(++mPosition);
+			final ProfileItem next = profile.get(++mPosition);
 			if(mPosition == 0) {
 				mCurrentLine = next;
 			} else if(mCurrentLine == null) {
@@ -97,93 +95,71 @@ public abstract class ProfileIterator<E extends ProfileItem> {
 		return mSource;
 	}
 
-	public ProfileIterator<E> setSource(int source) {
+	public ProfileIterator setSource(int source) {
 		mSource = source;
 		return this;
 	}
 
-	protected E getCurrentItem() {
-		return getItemAtPosition(mPosition);
+	protected ProfileItem getCurrentItem() {
+		return mDive.getProfile().get(mPosition);
 	}
-	
-	/**
-	 * Get the raw ProfileItem object at the given position. This is a low-level
-	 * method meant for routines that need to read the data in raw form (e.g. for
-	 * file export). This method can safely return a global flyweight element.
-	 * @param position The position at which to retrieve the ProfileItem
-	 * @return The ProfileItem at the given position, or null if an error occurred
-	 */
-	abstract protected E getItemAtPosition(int position);
 
-	abstract public int getCount();
-	
-	abstract protected boolean insertItemAtPosition(E item, int position);
-
-	public boolean appendItem(E newItem) {
+	public boolean appendItem(ProfileItem newItem) {
 		newItem.setLineSource(mSource);
-		if(! insertItemAtPosition(newItem, mPosition + 1)) {
-			return false;
-		}
+		List<ProfileItem> profile = mDive.getProfile();
+		profile.add(mPosition + 1, newItem);
 		// Go through all items after this one and mark them invalid if they
 		// can be marked as such
-		for(int p = mPosition + 1; p < getCount(); p++) {
-			E i = getItemAtPosition(p);
-			if(i.getValid() != ProfileItem.ALWAYS_VALID) {
-				i.setValid(ProfileItem.INVALID);
-				i.commit();
+		ListIterator<ProfileItem> i = profile.listIterator(mPosition + 1);
+		while(i.hasNext()) {
+			ProfileItem item = i.next();
+			if(item.getValid() != ProfileItem.ALWAYS_VALID) {
+				item.setValid(ProfileItem.INVALID);
+				//item.commit();
 			}
 		}
 		return false;
 	}
 	
-	public boolean replaceItem(E newItem) {
-		final E current = getCurrentItem();
+	public boolean replaceItem(ProfileItem newItem) {
+		final ProfileItem current = mDive.getProfile().get(mPosition);
 		if(mSource == current.getLineSource()) {
 			// The profile line has the same source as the processor that's
 			// currently editing. We can go ahead and replace it.
 			newItem.setLineSource(mSource);
 			current.merge(newItem);
-			current.commit();
+			//current.commit();
 		} else {
 			// We can't overwrite the item. Instead, we deactivate it and
 			// append a new one after it.
 			current.setActive(false);
-			current.commit();
+			//current.commit();
 			appendItem(newItem);
 		}
 		return true;
 	}
 	
 	/**
-	 * Remove all profile items that match the current source. If an error is
-	 * encountered processing continues, attempting to remove as many as
-	 * possible.
-	 * @return true if the operation succeeded, false if one or more attempted
-	 * deletions produced an error
+	 * Remove all profile items that match the current source.
 	 */
-	public boolean removeMyItems() {
+	public void removeMyItems() {
 		int p = 0;
-		boolean ret = true;
-		E lastItem = null;
-		while(p < getCount()) {
-			E i = getItemAtPosition(p);
+		List<ProfileItem> profile = mDive.getProfile();
+		for(Iterator<ProfileItem> it = profile.iterator(); it.hasNext(); ) {
+			ProfileItem i = it.next();
 			if(i.getLineSource() == mSource) {
-				if(i.isActive() && lastItem != null && ! lastItem.isActive()) {
-					lastItem.setActive(true);
-					lastItem.commit();
+				if(p > 0) {
+					ProfileItem lastItem = profile.get(p - 1);
+					if(i.isActive() && ! lastItem.isActive()) {
+						lastItem.setActive(true);
+						//lastItem.commit();
+					}
 				}
-				if(! lastItem.delete()) {
-					// This item failed to delete, but we can still move on and
-					// try to delete as many as possible
-					p++;
-					ret = false;
-				}
+				it.remove();
 			} else {
 				p++;
 			}
-			lastItem = i;
 		}
-		return ret;
 	}
 	
 	/*
@@ -225,13 +201,14 @@ public abstract class ProfileIterator<E extends ProfileItem> {
 	 * @throws CnsOtu.MaxPo2ExceededException thrown by CnsOtu if the max pO2
 	 * is exceeded during the operation
 	 */
-	public void runDeco(DecoAlgorithm<E> deco) throws IllegalStateException, CnsOtu.MaxPo2ExceededException {
-		int p = -1;
+	public void runDeco(DecoAlgorithm deco) throws IllegalStateException, CnsOtu.MaxPo2ExceededException {
 		GasSource lastGasSource = null;
 		mDive.initializeDeco(deco);
 		CnsOtu cnsOtuState = mDive.buildCnsOtu();
-		while(++p < getCount()) {
-			E i = getItemAtPosition(p);
+		moveToFirst();
+		List<ProfileItem> profile = mDive.getProfile();
+		while(moveToNext()) {
+			ProfileItem i = mCurrentLine;
 			// Skip inactive items
 			if(! i.isActive()) {
 				continue;
@@ -241,13 +218,13 @@ public abstract class ProfileIterator<E extends ProfileItem> {
 			}
 
 			// Run the deco algorithm
-			E deco_items[] = deco.run(i);
+			ProfileItem deco_items[] = deco.run(i);
 
 			// Any ProfileItems that were returned need to be added to the profile
 			// before the current item as deco stops
 			for(int j = 0; j < deco_items.length; j++) {
-				final E item = deco_items[j];
-				insertItemAtPosition(item, p++ - 1);
+				final ProfileItem item = deco_items[j];
+				profile.add(mPosition ++ - 1, item);
 				
 				// CNS/OTU for deco stop
 				cnsOtuState.changeDepth(item.getDepth(), item.getDepthChangeTime(), lastGasSource);
@@ -268,12 +245,12 @@ public abstract class ProfileIterator<E extends ProfileItem> {
 		}
 		// Now ascend to the surface
 		float lastRuntime = deco.getRuntime();
-		E deco_items[] = deco.surface();
+		ProfileItem deco_items[] = deco.surface();
 		
 		// Final deco stops before surfacing
 		for(int j = 0; j < deco_items.length; j++) {
-			E i = deco_items[j];
-			insertItemAtPosition(i, p++ - 1);
+			ProfileItem i = deco_items[j];
+			profile.add(mPosition ++ - 1, i);
 			
 			// CNS/OTU for deco stop
 			cnsOtuState.changeDepth(i.getDepth(), i.getDepthChangeTime(), lastGasSource);
@@ -292,7 +269,7 @@ public abstract class ProfileIterator<E extends ProfileItem> {
 		
 		mDive.saveDeco(deco);
 		mDive.saveCnsOtu(cnsOtuState);
-		mDive.commit();
+		//mDive.commit();
 	}
 
 }

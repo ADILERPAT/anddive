@@ -1,17 +1,15 @@
 package divestoclimb.lib.scuba;
 
-import divestoclimb.lib.data.Record;
-
 /**
  * A class that stores a single line of a dive profile. A line consists of the
  * entire time that a diver is at a constant depth, breathing from the same gas
  * source, for the same reason (e.g. planned or contingency)
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
-public class ProfileItem extends Record implements Record.Orderable<ProfileItem> {
+public class ProfileItem {
 
+	private Long id;
 	protected long mDiveID;
-	protected int mOrder;
 
 	// The depth of this profile line
 	private int mDepth = INHERIT_DEPTH;
@@ -99,6 +97,8 @@ public class ProfileItem extends Record implements Record.Orderable<ProfileItem>
 	// ProfileItem as computed by a DecoAlgorithm that processed this Item
 	private float mDepthChangeTime = -1;
 	
+	public ProfileItem() { }
+
 	public ProfileItem(long dive_id, int source, boolean alwaysValid) {
 		super();
 		mDiveID = dive_id;
@@ -106,7 +106,7 @@ public class ProfileItem extends Record implements Record.Orderable<ProfileItem>
 		mValid = alwaysValid? ALWAYS_VALID: VALID;
 	}
 
-	public ProfileItem(long id, long dive_id, int order, int depth, int time, int timeType, GasSource gasSource, int source, boolean alwaysValid) {
+	/*public ProfileItem(long dive_id, int order, int depth, int time, int timeType, GasSource gasSource, int source, boolean alwaysValid) {
 		super(id);
 		reset(id, dive_id, order, depth, time, timeType, gasSource, source, true, alwaysValid? ALWAYS_VALID: VALID);
 	}
@@ -128,36 +128,34 @@ public class ProfileItem extends Record implements Record.Orderable<ProfileItem>
 		mActive = active;
 		mValid = valid;
 		mSegtime = mDepthChangeTime = -1;
+	}*/
+	
+	public ProfileItem(long dive_id) {
+		mDiveID = dive_id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public Long getId() {
+		return id;
 	}
 
 	public int getDepth() { return mDepth; }
-	public ProfileItem setDepth(int depth) { if(depth != mDepth) { mDepth = depth; mDirty = true; } return this; }	
+	public ProfileItem setDepth(int depth) { mDepth = depth; return this; }	
 	public int getTime() { return mTime; }
-	public ProfileItem setTime(int time) { if(time != mTime) { mTime = time; mDirty = true; } return this; }
+	public ProfileItem setTime(int time) { mTime = time; return this; }
 	public int getTimeType() { return mTimeType; }
-	public ProfileItem setTimeType(int timeType) { if(timeType != mTimeType) { mTimeType = timeType; mDirty = true; } return this; }
+	public ProfileItem setTimeType(int timeType) { mTimeType = timeType; return this; }
 	public GasSource getGasSource() { return mGasSource; }
-	public ProfileItem setGasSource(GasSource gasSource) { if(! gasSource.equals(mGasSource)) { mGasSource = gasSource; mDirty = true; } return this; }
+	public ProfileItem setGasSource(GasSource gasSource) { mGasSource = gasSource; return this; }
 	public int getLineSource() { return mLineSource; }
-	public ProfileItem setLineSource(int source) { if(source != mLineSource) { mLineSource = source; mDirty = true; } return this; }
+	public ProfileItem setLineSource(int source) { mLineSource = source; return this; }
 	public boolean isActive() { return mActive; }
-	public ProfileItem setActive(boolean active) { if(active != mActive) { mActive = active; mDirty = true; } return this; }
+	public ProfileItem setActive(boolean active) { mActive = active; return this; }
 	public int getValid() { return mValid; }
-	public ProfileItem setValid(int valid) { if(valid != mValid) { mValid = valid; mDirty = true; } return this; }
-	
-	@Override
-	public int getOrder() {
-		return mOrder;
-	}
-
-	@Override
-	public ProfileItem setOrder(int order) {
-		if(order != mOrder) {
-			mOrder = order;
-			mDirty = true;
-		}
-		return this;
-	}
+	public ProfileItem setValid(int valid) { mValid = valid; return this; }
 
 	/**
 	 * Only meant to be called by a DecoAlgorithm to store the runtime after

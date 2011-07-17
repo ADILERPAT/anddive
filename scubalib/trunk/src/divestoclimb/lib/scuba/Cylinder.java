@@ -53,12 +53,12 @@ public class Cylinder implements Serializable {
 		mServicePressure = service_pressure;
 	}
 	
-	public Cylinder(Units units, long id, String name, float internal_volume, int service_pressure) {
+	/*public Cylinder(Units units, long id, String name, float internal_volume, int service_pressure) {
 		mUnits = units;
 		mName = name;
 		mInternalVolume = internal_volume;
 		mServicePressure = service_pressure;
-	}
+	}*/
 	
 	public void setId(long id) {
 		this.id = id;

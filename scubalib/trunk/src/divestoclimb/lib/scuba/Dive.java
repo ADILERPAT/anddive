@@ -1,31 +1,33 @@
 package divestoclimb.lib.scuba;
 
-import divestoclimb.lib.data.Record;
+import java.util.List;
 
 // TODO add Type support
-public class Dive extends Record implements Record.Orderable<Dive> {
+public class Dive {
 
+	private Long id;
 	protected String mName;
 	protected long mMissionID;
 	protected Mission mMission;
-	protected Record.Fetcher<Mission> mMissionFetcher;
+	//protected Record.Fetcher<Mission> mMissionFetcher;
 	protected int mMissionOrder;
 	protected int mAltitude = 0;
 	protected int mAcclimatizationTime = 0;
 	protected long mDecosetID;
 	protected Decoset mDecoset;
-	protected Record.Fetcher<Decoset> mDecosetFetcher;
-	protected ProfileIterator<? extends ProfileItem> mProfile = null;
+	//protected Record.Fetcher<Decoset> mDecosetFetcher;
+	protected List<ProfileItem> mProfile = null;
+	//protected ProfileFetcher mProfileFetcher;
+	protected Dive mPreviousDive = null;
 	protected int mSurfaceInterval = 0;
 	protected byte[] mDecoConfig;
 	protected byte[] mFinalDecoState;
 	protected float mFinalCnsState, mFinalOtuState;
-	protected PreviousDiveFetcher mPreviousDiveFetcher;
+	//protected PreviousDiveFetcher mPreviousDiveFetcher;
 	
 	protected Units mUnits;
 	
 	public Dive(Units units, long mission_id, int mission_order, String name, long decoset_id) {
-		super();
 		mUnits = units;
 		mMissionID = mission_id;
 		mMissionOrder = mission_order;
@@ -33,90 +35,59 @@ public class Dive extends Record implements Record.Orderable<Dive> {
 		mDecosetID = decoset_id;
 	}
 	
-	public Dive(Units units, long id, long mission_id, int mission_order, String name, long decoset_id, int surface_interval, int altitude, int acclimatization_time, byte[] decoConfig, byte[] finalDecoState, float finalCnsState, float finalOtuState) {
-		super(id);
-		reset(id, mission_id, mission_order, name, decoset_id, surface_interval, altitude, acclimatization_time, decoConfig, finalDecoState, finalCnsState, finalOtuState);
+	public void setId(long id) {
+		this.id = id;
 	}
 
-	public void reset(long id, long mission_id, int mission_order, String name, long decoset_id, int surface_interval, int altitude, int acclimatization_time, byte[] decoConfig, byte[] finalDecoState, float finalCnsState, float finalOtuState) {
-		super.reset(id);
-		mName = name;
-		if(mMissionID != mission_id) {
-			mMission = null;
-		}
-		mMissionID = mission_id;
-		mMissionOrder = mission_order;
-		if(mDecosetID != decoset_id) {
-			mDecoset = null;
-		}
-		mDecosetID = decoset_id;
-		mSurfaceInterval = surface_interval;
-		mAltitude = altitude;
-		mAcclimatizationTime = acclimatization_time;
-		mDecoConfig = decoConfig;
-		mFinalDecoState = finalDecoState;
-		mFinalCnsState = finalCnsState;
-		mFinalOtuState = finalOtuState;
+	public Long getId() {
+		return id;
 	}
-	
 	public String getName() { return mName; }
-	public Dive setName(String name) { if(mName != name) { mName = name; mDirty = true; } return this; }
+	public Dive setName(String name) { mName = name; return this; }
 	public long getMissionID() { return mMissionID; }
-	public Dive setMissionFetcher(Record.Fetcher<Mission> f) { mMissionFetcher = f; return this; }
+	//public Dive setMissionFetcher(Record.Fetcher<Mission> f) { mMissionFetcher = f; return this; }
 	public long getDecosetID() { return mDecosetID; }
-	public Dive setDecosetFetcher(Record.Fetcher<Decoset> f) { mDecosetFetcher = f; return this; }
+	//public Dive setDecosetFetcher(Record.Fetcher<Decoset> f) { mDecosetFetcher = f; return this; }
+	//public Dive setProfileFetcher(ProfileFetcher f) { mProfileFetcher = f; return this; }
 	public int getAltitude() { return mAltitude; }
-	public Dive setAltitude(int altitude) { if(altitude != mAltitude) { mAltitude = altitude; mDirty = true; } return this; }
+	public Dive setAltitude(int altitude) { mAltitude = altitude; return this; }
 	public int getAcclimatizationTime() { return mAcclimatizationTime; }
-	public Dive setAcclimatizationTime(int acclimatizationTime) { if(acclimatizationTime != mAcclimatizationTime) { mAcclimatizationTime = acclimatizationTime; mDirty = true; } return this; }
+	public Dive setAcclimatizationTime(int acclimatizationTime) { mAcclimatizationTime = acclimatizationTime; return this; }
 	public int getSurfaceInterval() { return mSurfaceInterval; }
-	public Dive setSurfaceInterval(int surfaceInterval) { if(surfaceInterval != mSurfaceInterval) { mSurfaceInterval = surfaceInterval; mDirty = true; } return this; }
+	public Dive setSurfaceInterval(int surfaceInterval) { mSurfaceInterval = surfaceInterval; return this; }
 
 	public Mission getMission() {
-		if(mMissionFetcher == null) {
+		/*if(mMissionFetcher == null) {
 			return null;
 		}
 		if(mMission == null) {
 			mMission = mMissionFetcher.fetch(mMissionID);
-		}
+		}*/
 		return mMission;
 	}
 
 	public Decoset getDecoset() {
-		if(mDecosetFetcher == null) {
-			return null;
-		}
-		if(mDecoset == null) {
+		/*if(mDecoset == null && mDecosetFetcher != null) {
 			mDecoset = mDecosetFetcher.fetch(mDecosetID);
-		}
+		}*/
 		return mDecoset;
 	}
 	public Dive setDecoset(Decoset decoset) {
 		if(decoset.getId() != mDecosetID) {
 			mDecoset = decoset;
 			mDecosetID = decoset.getId();
-			mDirty = true;
 		}
 		return this;
+	}
+	
+	public List<ProfileItem> getProfile() {
+		/*if(mProfile == null && mProfileFetcher != null) {
+			mProfile = mProfileFetcher.fetchProfile(this);
+		}*/
+		return mProfile;
 	}
 
-	public Dive setPreviousDiveFetcher(PreviousDiveFetcher f) { mPreviousDiveFetcher = f; return this; }
-	
-	@Override
-	public int getOrder() {
-		return mMissionOrder;
-	}
-	
-	@Override
-	public Dive setOrder(int order) {
-		if(order != mMissionOrder) {
-			mMissionOrder = order;
-			mDirty = true;
-			// TODO if the order of dives in a mission changes, all the deco info needs to be cleared and
-			// recomputed.
-		}
-		return this;
-	}
+	//public Dive setPreviousDiveFetcher(PreviousDiveFetcher f) { mPreviousDiveFetcher = f; return this; }
 	
 	/**
 	 * Construct the CnsOtu state object initialized to the beginning of the dive.
@@ -125,26 +96,30 @@ public class Dive extends Record implements Record.Orderable<Dive> {
 	 * @return The initialized CnsOtu object
 	 */
 	public CnsOtu buildCnsOtu() {
-		Dive previous = mPreviousDiveFetcher.fetchPreviousDive(this);
-		return new CnsOtu(mAltitude, mUnits, previous.mFinalCnsState, previous.mFinalOtuState);
+		/*if(mPreviousDive == null) {
+			mPreviousDive = mPreviousDiveFetcher.fetchPreviousDive(this);
+		}*/
+		float cns = 0, otu = 0;
+		if(mPreviousDive != null) {
+			cns = mPreviousDive.mFinalCnsState;
+			otu = mPreviousDive.mFinalOtuState;
+		}
+		return new CnsOtu(mAltitude, mUnits, cns, otu);
 	}
 	
 	public void saveCnsOtu(CnsOtu state) {
 		float cns = state.getCns();
-		if(cns != mFinalCnsState) {
-			mFinalCnsState = cns;
-			mDirty = true;
-		}
+		mFinalCnsState = cns;
 		float otu = state.getOtu();
-		if(otu != mFinalOtuState) {
-			mFinalOtuState = cns;
-			mDirty = true;
-		}
+		mFinalOtuState = otu;
 	}
 
-	public void initializeDeco(DecoAlgorithm<?> alg) {
+	public void initializeDeco(DecoAlgorithm alg) {
 		alg.loadConfig(mDecoConfig);
-		Dive previous = mPreviousDiveFetcher.fetchPreviousDive(this);
+		/*if(mPreviousDive == null) {
+			mPreviousDive = mPreviousDiveFetcher.fetchPreviousDive(this);
+		}*/
+		Dive previous = mPreviousDive;
 		if(previous != null) {
 			alg.loadState(previous.mFinalDecoState);
 		}
@@ -159,21 +134,22 @@ public class Dive extends Record implements Record.Orderable<Dive> {
 		alg.surfaceInterval(mAltitude, mAcclimatizationTime, air);
 	}
 	
-	public void saveDeco(DecoAlgorithm<?> alg) {
+	public void saveDeco(DecoAlgorithm alg) {
 		byte[] finalDecoState = alg.getState();
-		if(finalDecoState != mFinalDecoState) {
-			mFinalDecoState = finalDecoState;
-			mDirty = true;
-		}
+		mFinalDecoState = finalDecoState;
 	}
 	
-	public static interface PreviousDiveFetcher {
+	/*public static interface PreviousDiveFetcher {
 		/**
 		 * Retrieve the Dive that was performed prior to the passed one, for use in
 		 * repetitive calculations
 		 * @param dive The Dive in this mission following the one to look for.
 		 * @return The Dive preceding dive. If dive is null, return the last dive in this Mission.
-		 */
+		
 		public Dive fetchPreviousDive(Dive dive);
 	}
+	
+	public static interface ProfileFetcher {
+		public List<ProfileItem> fetchProfile(Dive dive);
+	}*/
 }
