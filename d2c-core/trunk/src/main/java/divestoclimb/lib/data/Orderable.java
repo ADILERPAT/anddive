@@ -5,6 +5,7 @@ package divestoclimb.lib.data;
  * subclass implement Orderable.
  * @author Ben Roberts (divestoclimb@gmail.com)
  */
+@Deprecated
 public interface Orderable {
 	/**
 	 * Get the current value of the order field
